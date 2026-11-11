@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+!.env.example
+storage-data/
+logs/
+test-reports/
+*.log
+.tmp-*
+
+# Old Supabase source kept only for reference (contains credentials)
+reference/

@@ -1,0 +1,22 @@
+{
+  "name": "simplelecture-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "realtime:apply": "node scripts/apply-realtime.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.10",
+    "pg": "^8.16.3",
+    "sharp": "^0.33.5",
+    "ws": "^8.22.1"
+  }
+}

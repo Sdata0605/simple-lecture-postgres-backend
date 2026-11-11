@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; base-uri 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <title>SimpleLecture admin logs</title>
+  <link rel="stylesheet" href="./admin.css">
+  <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- Login screen -->
+  <main id="login-screen" class="login-screen" hidden>
+    <form id="login-form" class="login-card" novalidate>
+      <h1 class="login-title">SimpleLecture admin</h1>
+      <p class="muted">Sign in with the master key to view backend logs.</p>
+      <label for="login-key">Master key</label>
+      <input id="login-key" name="key" type="password" autocomplete="current-password" spellcheck="false" autocapitalize="off" required>
+      <p id="login-error" class="form-error" role="alert"></p>
+      <button id="login-submit" type="submit" class="btn btn-primary">Sign in</button>
+    </form>
+  </main>
+
+  <!-- Signed-in shell -->
+  <div id="app-shell" class="shell" hidden>
+    <header class="brand-bar">
+      <span class="brand">SimpleLecture <span class="brand-sub">admin logs</span></span>
+      <button id="logout-btn" type="button" class="btn btn-ghost">Sign out</button>
+    </header>
+
+    <nav id="sidebar" class="sidebar" aria-label="Log pages">
+      <ul class="nav-list">
+        <li><a class="nav-link" href="#/dashboard" data-route="dashboard">Dashboard</a></li>
+        <li class="nav-group">
+          <span class="nav-group-title" id="nav-auth-title">Auth</span>
+          <ul class="nav-sub" aria-labelledby="nav-auth-title">
+            <li><a class="nav-link" href="#/auth/login" data-route="auth/login">Log in</a></li>
+            <li><a class="nav-link" href="#/auth/signup" data-route="auth/signup">Sign up</a></li>
+            <li><a class="nav-link" href="#/otp/email" data-route="otp/email">Email OTP</a></li>
+            <li><a class="nav-link" href="#/otp/sms" data-route="otp/sms">Mobile OTP</a></li>
+            <li><a class="nav-link" href="#/otp/whatsapp" data-route="otp/whatsapp">WhatsApp OTP</a></li>
+          </ul>
+        </li>
+        <li><a class="nav-link" href="#/admin-logins" data-route="admin-logins">Admin logins</a></li>
+        <li><span class="nav-link is-disabled" aria-disabled="true">Home page <span class="soon">Soon</span></span></li>
+        <li><span class="nav-link is-disabled" aria-disabled="true">Programs <span class="soon">Soon</span></span></li>
+        <li><span class="nav-link is-disabled" aria-disabled="true">V5 Play <span class="soon">Soon</span></span></li>
+      </ul>
+    </nav>
+
+    <div class="content">
+      <section class="toolbar" aria-label="Time window and refresh">
+        <div class="presets" role="group" aria-label="Time window presets">
+          <button type="button" class="chip" data-preset="15m" aria-pressed="false">Last 15 min</button>
+          <button type="button" class="chip" data-preset="1h" aria-pressed="false">Last hour</button>
+          <button type="button" class="chip" data-preset="today" aria-pressed="false">Today</button>
+          <button type="button" class="chip" data-preset="24h" aria-pressed="false">Last 24 h</button>
+        </div>
+        <form id="custom-range" class="custom-range" novalidate>
+          <div class="field">
+            <label for="range-from">From (IST)</label>
+            <input id="range-from" type="datetime-local" step="60">
+          </div>
+          <div class="field">
+            <label for="range-to">To (IST)</label>
+            <input id="range-to" type="datetime-local" step="60">
+          </div>
+          <button type="submit" class="btn">Apply</button>
+        </form>
+        <div class="toolbar-actions">
+          <label class="switch">
+            <input id="live-toggle" type="checkbox">
+            <span class="switch-track" aria-hidden="true"></span>
+            <span>Live (5 s)</span>
+          </label>
+          <button id="refresh-btn" type="button" class="btn">Refresh</button>
+        </div>
+        <p id="range-error" class="form-error" role="alert"></p>
+      </section>
+
+      <div id="live-notice" class="live-notice" hidden>
+        <span class="live-dot" aria-hidden="true"></span>
+        <span>Live mode is on: this page refreshes every 5 seconds.</span>
+        <span id="live-updated" class="muted"></span>
+      </div>
+
+      <main id="main" tabindex="-1" class="main">
+        <h1 id="page-title" class="page-title">Dashboard</h1>
+        <p id="window-label" class="muted window-label"></p>
+        <div id="page-root"></div>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="details-dialog" class="sheet" aria-labelledby="details-title">
+    <div class="sheet-head">
+      <h2 id="details-title" tabindex="-1">Log details</h2>
+      <button id="details-close" type="button" class="btn btn-ghost" aria-label="Close details">Close</button>
+    </div>
+    <div id="details-body" class="sheet-body"></div>
+  </dialog>
+
+  <div id="sr-status" class="visually-hidden" role="status" aria-live="polite"></div>
+</body>
+</html>

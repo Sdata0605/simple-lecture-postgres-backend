@@ -91,6 +91,14 @@ export function getColumn(cat, table, name) {
 // Finds the foreign key linking base and target. "m2o" means base holds the key (courses(name) from cart_items);
 // "o2m" means target holds the key (an array result). hint is an optional FK column name for disambiguation.
 export function findRelation(cat, base, target, hint) {
+  // PostgREST also accepts the foreign-key column as the embed name (alias:subject_id(id,name)).
+  if (IDENT.test(target) && !cat.tables.has(target)) {
+    const viaColumn = cat.fkList.filter((f) => f.tbl === base && f.col === target);
+    if (viaColumn.length === 1) {
+      hint = hint || target;
+      target = viaColumn[0].ftbl;
+    }
+  }
   if (!IDENT.test(target) || !cat.tables.has(target)) {
     throw new RestError(400, `could not find a relationship between ${base} and ${target}`, { code: "PGRST200" });
   }

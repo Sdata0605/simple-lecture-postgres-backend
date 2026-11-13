@@ -7,16 +7,16 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import express from "express";
 import sharp from "sharp";
+import { UPLOAD_ROOT } from "../_shared/storage.js";
 
 export const router = express.Router();
 
 const DEFAULT_BASE = "https://supabase-proxy.utuberpraveen.workers.dev/storage/v1/object/public/course-thumbnails/";
 const MAX_SOURCE_BYTES = 15 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 20_000;
-const CACHE_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "storage-data", "thumb-cache");
+const CACHE_DIR = path.join(UPLOAD_ROOT, "thumb-cache");
 
 const allowedBase = () => process.env.COURSE_THUMBNAIL_BASE || DEFAULT_BASE;
 

@@ -46,7 +46,7 @@ export function parseSelect(input) {
       items.push({ star: true });
       continue;
     }
-    const m = /^(?:([A-Za-z_][A-Za-z0-9_]*):)?([A-Za-z_][A-Za-z0-9_]*)(?:!([A-Za-z_][A-Za-z0-9_]*))?(?:\((.*)\))?$/s.exec(part);
+    const m = /^(?:([A-Za-z_][A-Za-z0-9_]*):)?([A-Za-z_][A-Za-z0-9_]*)(?:!([A-Za-z_][A-Za-z0-9_]*))?(?:\s*\((.*)\))?$/s.exec(part);
     if (!m) throw bad(`invalid select item "${part.slice(0, 80)}"`);
     const [, alias, name, hintRaw, inner] = m;
     if (inner !== undefined) {

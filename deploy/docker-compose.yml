@@ -1,0 +1,23 @@
+# Server layout: /home2/simplelecture-backend/{app (this repo), .env, storage-data, logs, docker-compose.yml}
+# The API listens on 127.0.0.1:8787 only. Apache terminates HTTPS and proxies the public hostname to it,
+# so no server IP or port is exposed to browsers. The database is reached over the Docker network
+# (DATABASE_URL host "pg", port 5432), not through the published database port.
+services:
+  api:
+    build: ./app
+    container_name: simplelecture-api
+    restart: unless-stopped
+    env_file: ./.env
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - ./storage-data:/data/storage-data
+      - ./logs:/app/logs
+    networks:
+      - default
+      - db
+
+networks:
+  db:
+    external: true
+    name: simplelecture-pg_default

@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { corsOptions } from "./cors.js";
 import { fileURLToPath } from "node:url";
 import { log } from "../functions/_shared/log.js";
 import { query } from "../functions/_shared/db.js";
@@ -171,7 +172,7 @@ const ADMIN_UI_DIR = fileURLToPath(new URL("../admin-ui", import.meta.url));
 // Builds the Express app without listening, so tests can import it.
 export function createApp() {
   const app = express();
-  app.use(cors({ origin: true, credentials: true }));
+  app.use(cors(corsOptions()));
   // Request ID and one stdout line plus one system_logs row per request (method, path without query, status, ms).
   app.use((req, res, next) => {
     const started = Date.now();

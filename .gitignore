@@ -5,8 +5,8 @@ node_modules/
 storage-data/
 logs/
 test-reports/
+schema-compare-output.txt
+.tmp-*.mjs
 *.log
-.tmp-*
-
-# Old Supabase source kept only for reference (contains credentials)
+# original Supabase function sources: several contain hard-coded credentials, keep local only
 reference/

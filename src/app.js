@@ -38,6 +38,7 @@ import { router as r_public_topic_content } from "../functions/public-topic-cont
 import { router as r_razorpay_webhook } from "../functions/razorpay-webhook/index.js";
 import { router as r_reconcile_video_jobs } from "../functions/reconcile-video-jobs/index.js";
 import { router as r_record_daily_attendance } from "../functions/record-daily-attendance/index.js";
+import { router as r_dashboard } from "../functions/dashboard/index.js";
 import { router as r_recover_pending_payments } from "../functions/recover-pending-payments/index.js";
 import { router as r_regrade_self_test } from "../functions/regrade-self-test/index.js";
 import { router as r_retry_failed_job } from "../functions/retry-failed-job/index.js";
@@ -264,6 +265,7 @@ export function createApp() {
   app.use("/functions/v1/public-topic-content", r_public_topic_content);
   app.use("/functions/v1/reconcile-video-jobs", r_reconcile_video_jobs);
   app.use("/functions/v1/record-daily-attendance", r_record_daily_attendance);
+  app.use("/functions/v1/dashboard", r_dashboard);
   app.use("/functions/v1/recover-pending-payments", r_recover_pending_payments);
   app.use("/functions/v1/regrade-self-test", r_regrade_self_test);
   app.use("/functions/v1/retry-failed-job", r_retry_failed_job);

@@ -4,6 +4,7 @@
 //   GET  /object/public/<bucket>/<path>               public read, public buckets only
 import express from "express";
 import jwt from "jsonwebtoken";
+import sharp from "sharp";
 import { exists, readFile, upload, verifySignedToken } from "../_shared/storage.js";
 import {
   bucketPolicy,
@@ -153,5 +154,57 @@ router.get(/^\/object\/public\/([^/]+)\/(.+)$/, async (req, res) => {
   } catch (e) {
     if (isInvalidPath(e)) return sendError(res, 400, "InvalidKey", "Invalid object path");
     return sendError(res, 404, "NotFound", "Object not found");
+  }
+});
+
+// Image render (Supabase-style): GET /render/image/public/<bucket>/<path>?width&height&resize&quality&format
+// Public buckets only. Resizes with sharp. resize = cover (default) | contain | fill.
+// format = webp (default) | jpeg | png | avif.
+const RENDER_TYPES = { webp: "image/webp", jpeg: "image/jpeg", png: "image/png", avif: "image/avif" };
+const clampInt = (raw, lo, hi) => {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? Math.min(hi, Math.max(lo, Math.round(n))) : undefined;
+};
+
+router.get(/^\/render\/image\/public\/([^/]+)\/(.+)$/, async (req, res) => {
+  const bucket = req.params[0];
+  const objectPath = req.params[1];
+  const policy = bucketPolicy(bucket);
+  if (!policy || !policy.public) {
+    return sendError(res, 404, "NotFound", "Object not found");
+  }
+  if (!["png", "jpg", "jpeg", "gif", "webp"].includes(extensionOf(objectPath))) {
+    return sendError(res, 400, "InvalidImage", "Not an image");
+  }
+  let bytes;
+  try {
+    bytes = await readFile(bucket, objectPath);
+  } catch (e) {
+    if (isInvalidPath(e)) return sendError(res, 400, "InvalidKey", "Invalid object path");
+    return sendError(res, 404, "NotFound", "Object not found");
+  }
+  try {
+    const width = clampInt(req.query.width, 1, 4000);
+    const height = clampInt(req.query.height, 1, 4000);
+    const quality = clampInt(req.query.quality, 1, 100) ?? 80;
+    const fit = ["cover", "contain", "fill"].includes(req.query.resize) ? req.query.resize : "cover";
+    const format = Object.prototype.hasOwnProperty.call(RENDER_TYPES, req.query.format) ? req.query.format : "webp";
+
+    let pipeline = sharp(bytes, { failOn: "none" }).rotate();
+    if (width || height) {
+      pipeline = pipeline.resize({ width, height, fit, withoutEnlargement: true });
+    }
+    if (format === "jpeg") pipeline = pipeline.jpeg({ quality });
+    else if (format === "png") pipeline = pipeline.png();
+    else if (format === "avif") pipeline = pipeline.avif({ quality });
+    else pipeline = pipeline.webp({ quality });
+
+    const out = await pipeline.toBuffer();
+    res.setHeader("Content-Type", RENDER_TYPES[format]);
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    return res.send(out);
+  } catch (e) {
+    return sendError(res, 500, "RenderFailed", "Could not render image");
   }
 });

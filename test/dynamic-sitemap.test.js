@@ -11,8 +11,8 @@ describe("dynamic-sitemap", () => {
     const r = await call("GET", "/functions/v1/dynamic-sitemap");
     assert.equal(r.status, 200);
     assert.match(r.body, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
-    assert.match(r.body, /<loc>https:\/\/simplelecture\.com\/programs<\/loc>/);
-    assert.match(r.body, /<loc>https:\/\/simplelecture\.com\/learn\/jee-main-online-coaching<\/loc>/);
+    assert.match(r.body, /<loc>https:\/\/simplelecture\.com\/programs\/<\/loc>/);
+    assert.match(r.body, /<loc>https:\/\/simplelecture\.com\/learn\/jee-main-online-coaching\/<\/loc>/);
   });
 
   it("escapes XML special characters in slugs", () => {
@@ -23,7 +23,7 @@ describe("dynamic-sitemap", () => {
       posts: [],
       goals: [],
     });
-    assert.match(xml, /<loc>https:\/\/simplelecture\.com\/course\/x&amp;y&lt;z<\/loc>/);
+    assert.match(xml, /<loc>https:\/\/simplelecture\.com\/course\/x&amp;y&lt;z\/<\/loc>/);
     assert.doesNotMatch(xml, /x&y<z/);
   });
 

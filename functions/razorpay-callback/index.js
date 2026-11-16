@@ -23,6 +23,20 @@ const pickOrigin = (value) => (value && ALLOWED_RETURN_ORIGINS.includes(value) ?
 
 const redirect = (res, location) => res.redirect(303, location);
 
+// Razorpay lookups can fail on a flaky network: retry with a per-attempt timeout before giving up.
+export async function fetchWithRetry(url, init, attempts = 3) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await (hooks.fetch ?? fetch)(url, { ...init, signal: AbortSignal.timeout(10000) });
+    } catch (err) {
+      lastErr = err;
+      await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 function signatureMatches(expectedHex, givenHex) {
   const a = Buffer.from(String(expectedHex));
   const b = Buffer.from(String(givenHex ?? ""));
@@ -83,9 +97,17 @@ router.all("/", async (req, res) => {
 
       // 3. Razorpay must confirm: captured, same order, INR, exact stored amount.
       const base = (process.env.RAZORPAY_API_BASE || "https://api.razorpay.com").replace(/\/$/, "");
-      const rp = await (hooks.fetch ?? fetch)(`${base}/v1/payments/${encodeURIComponent(razorpayPaymentId)}`, {
-        headers: { Authorization: "Basic " + Buffer.from(`${keyId}:${secret}`).toString("base64") },
-      });
+      let rp;
+      try {
+        rp = await fetchWithRetry(`${base}/v1/payments/${encodeURIComponent(razorpayPaymentId)}`, {
+          headers: { Authorization: "Basic " + Buffer.from(`${keyId}:${secret}`).toString("base64") },
+        });
+      } catch (netErr) {
+        // Razorpay could not be reached. The payment may still have succeeded, so do not fail the order here:
+        // leave it pending (the webhook or a retry can complete it) and send the customer to the pending page.
+        console.error("Callback: Razorpay unreachable, leaving order pending", razorpayOrderId, netErr?.message);
+        return redirect(res, `${origin}/payment-success${orderParam}`);
+      }
       if (!rp.ok) {
         console.error("Callback: Razorpay lookup failed", rp.status);
         return redirect(res, `${origin}/payment-failed${orderParam}`);

@@ -33,7 +33,7 @@ router.post("/", async (req, res) => {
     if (grant === "refresh_token") {
       const rt = String(req.body?.refresh_token || "");
       const { rows } = await query(
-        `SELECT s.id AS session_id, u.* FROM public.auth_refresh_tokens s
+        `SELECT s.id AS session_id, s.session_key, u.* FROM public.auth_refresh_tokens s
            JOIN auth.users u ON u.id = s.user_id
           WHERE s.refresh_token = $1 AND s.expires_at > now() LIMIT 1`,
         [rt]
@@ -45,7 +45,7 @@ router.post("/", async (req, res) => {
       log.info("auth-token.refresh.ok", { user_id: rows[0].id, email: rows[0].email });
       // Rotate: the old refresh token is single-use.
       await query("DELETE FROM public.auth_refresh_tokens WHERE id = $1", [rows[0].session_id]);
-      return res.json(await issueSession(rows[0]));
+      return res.json(await issueSession(rows[0], rows[0].session_key));
     }
 
     return res.status(400).json({ error: "unsupported_grant_type" });

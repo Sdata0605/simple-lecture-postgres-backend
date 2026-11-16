@@ -44,6 +44,10 @@ export async function resolveCaller(req, query) {
   const userId = String(payload.sub).toLowerCase();
   if (!UUID.test(userId)) throw new RestError(401, "JWT invalid", { code: "PGRST301" });
 
+  if (payload.sid) {
+    const revoked = await query("SELECT 1 FROM public.auth_revoked_sessions WHERE session_key = $1", [payload.sid]);
+    if (revoked.rows.length) throw new RestError(401, "session revoked", { code: "PGRST301" });
+  }
   const { rows } = await query("SELECT email FROM auth.users WHERE id = $1", [userId]);
   if (rows.length === 0) throw new RestError(401, "user not found", { code: "PGRST301" });
   return {

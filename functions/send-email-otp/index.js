@@ -5,7 +5,8 @@ import { query, lockedBy } from "../_shared/db.js";
 import { generateOtp, sha256, minutesFromNow } from "../_shared/otp.js";
 import { sendMail } from "../_shared/mail.js";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// ASCII only: unicode addresses are rejected (format policy, matches the Supabase-era login form).
+const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
 const fail = (res, status, error) => {
   log.warn("send-email-otp.rejected", { status, reason: error, email: res.req?.body?.email });
   return res.status(status).json({ error });

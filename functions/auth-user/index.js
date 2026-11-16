@@ -12,6 +12,10 @@ router.get("/", async (req, res) => {
   if (!token) return res.status(401).json({ error: "no_authorization", error_description: "No API key found in request" });
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
+    if (payload.sid) {
+      const revoked = await query("SELECT 1 FROM public.auth_revoked_sessions WHERE session_key = $1", [payload.sid]);
+      if (revoked.rows.length) return res.status(401).json({ error: "session_revoked", error_description: "Session has been logged out" });
+    }
     const { rows } = await query("SELECT * FROM auth.users WHERE id = $1", [payload.sub]);
     if (!rows[0]) return res.status(401).json({ error: "user_not_found" });
     return res.json(toAuthUser(rows[0]));

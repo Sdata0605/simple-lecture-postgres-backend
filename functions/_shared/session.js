@@ -24,10 +24,11 @@ export function toAuthUser(row) {
 }
 
 // Issues an access JWT (signed with JWT_SECRET) and a stored refresh token, then returns the session.
-export async function issueSession(user) {
+// sessionKey is kept across refresh-token rotation; a new login gets a new one.
+export async function issueSession(user, sessionKey = crypto.randomUUID()) {
   const now = Math.floor(Date.now() / 1000);
   const access_token = jwt.sign(
-    { sub: user.id, email: user.email, role: "authenticated", aud: "authenticated" },
+    { sub: user.id, email: user.email, role: "authenticated", aud: "authenticated", sid: sessionKey },
     process.env.JWT_SECRET,
     { expiresIn: ACCESS_TTL_SECONDS }
   );
@@ -35,9 +36,9 @@ export async function issueSession(user) {
 
   await query("UPDATE auth.users SET last_sign_in_at = now() WHERE id = $1", [user.id]);
   await query(
-    `INSERT INTO public.auth_refresh_tokens (user_id, refresh_token, expires_at)
-     VALUES ($1, $2, now() + make_interval(days => $3))`,
-    [user.id, refresh_token, REFRESH_TTL_DAYS]
+    `INSERT INTO public.auth_refresh_tokens (user_id, refresh_token, expires_at, session_key)
+     VALUES ($1, $2, now() + make_interval(days => $3), $4)`,
+    [user.id, refresh_token, REFRESH_TTL_DAYS, sessionKey]
   );
 
   log.info("session.issued", { user_id: user.id, email: user.email });

@@ -8,7 +8,8 @@ import { generateOtp, sha256, minutesFromNow } from "../_shared/otp.js";
 import { sendMail } from "../_shared/mail.js";
 
 const GENERIC = "If an account exists with this email, you will receive an OTP shortly.";
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// ASCII only: unicode addresses are rejected (format policy, matches the Supabase-era login form).
+const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
 
 export const router = express.Router();
 

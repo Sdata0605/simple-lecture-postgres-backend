@@ -6,7 +6,7 @@ import express from "express";
 import { q, uniqueEmail } from "./helpers.js";
 import { pool } from "../functions/_shared/db.js";
 import { createAuthUser } from "../functions/_shared/accounts.js";
-import { router } from "../functions/verify-payment/index.js";
+import { router, hooks } from "../functions/verify-payment/index.js";
 
 const SECRET = "test-razorpay-secret-not-real";
 let server;
@@ -42,10 +42,11 @@ describe("verify-payment", () => {
       `Pay ${tag}`,
       `pay-${tag}`.toLowerCase(),
     ]);
-    await q("INSERT INTO public.payments (user_id, order_id, amount_inr, final_amount, status) VALUES ($1, $2, 100, 100, 'pending')", [
+    const [pay] = await q("INSERT INTO public.payments (user_id, order_id, amount_inr, final_amount, status, gateway_order_id) VALUES ($1, $2, 100, 100, 'pending', 'order_rz') RETURNING id", [
       user.id,
       orderId,
     ]);
+    await q("INSERT INTO public.order_items (payment_id, course_id, price_inr) VALUES ($1, $2, 100)", [pay.id, courseId]);
   });
 
   after(async () => {
@@ -66,7 +67,7 @@ describe("verify-payment", () => {
       const r = await post({ razorpay_order_id: "o", razorpay_payment_id: "p", razorpay_signature: "x", orderId });
       assert.equal(r.status, 500);
       assert.equal(r.body.verified, false);
-      assert.equal(r.body.error, "Razorpay secret not configured");
+      assert.equal(r.body.error, "Razorpay keys not configured");
     } finally {
       process.env.RAZORPAY_KEY_SECRET = saved;
     }
@@ -84,9 +85,10 @@ describe("verify-payment", () => {
   });
 
   it("marks the payment successful and enrolls the student on a valid signature", async () => {
+    hooks.fetch = async () => new Response(JSON.stringify({ id: "pay_rz", order_id: "order_rz", status: "captured", currency: "INR", amount: 10000 }), { status: 200, headers: { "Content-Type": "application/json" } });
     const r = await post({
       razorpay_order_id: "order_rz", razorpay_payment_id: "pay_rz", razorpay_signature: sign("order_rz", "pay_rz"),
-      orderId, userId: user.id, courses: [{ id: courseId }],
+      orderId,
     });
     assert.equal(r.status, 200);
     assert.equal(r.body.verified, true);
@@ -95,5 +97,6 @@ describe("verify-payment", () => {
     assert.equal(p.gateway_payment_id, "pay_rz");
     const [e] = await q("SELECT is_active FROM public.enrollments WHERE student_id = $1 AND course_id = $2", [user.id, courseId]);
     assert.equal(e.is_active, true);
+    hooks.fetch = null;
   });
 });

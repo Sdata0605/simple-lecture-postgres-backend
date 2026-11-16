@@ -36,6 +36,7 @@ import { router as r_process_educational_pdfs } from "../functions/process-educa
 import { router as r_process_llm_extraction } from "../functions/process-llm-extraction/index.js";
 import { router as r_public_topic_content } from "../functions/public-topic-content/index.js";
 import { router as r_razorpay_webhook } from "../functions/razorpay-webhook/index.js";
+import { router as r_razorpay_callback } from "../functions/razorpay-callback/index.js";
 import { router as r_reconcile_video_jobs } from "../functions/reconcile-video-jobs/index.js";
 import { router as r_record_daily_attendance } from "../functions/record-daily-attendance/index.js";
 import { router as r_dashboard } from "../functions/dashboard/index.js";
@@ -218,6 +219,7 @@ export function createApp() {
   });
   // Razorpay signs the raw body, so this route must run before the JSON parser.
   app.use("/functions/v1/razorpay-webhook", r_razorpay_webhook);
+  app.use("/functions/v1/razorpay-callback", r_razorpay_callback);
   app.use(express.json({ limit: "1mb" }));
   // Malformed or oversized JSON gets a plain JSON error, never an HTML page with a stack trace.
   app.use((err, req, res, next) => {

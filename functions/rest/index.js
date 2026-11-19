@@ -33,6 +33,9 @@ export const router = express.Router();
 
 // A route returns { status, headers?, json? }. json undefined means no body. It is sent only after COMMIT.
 const sendReply = (res, reply) => {
+  // Content-Range carries the row count, and an ETag covers only the body. Without no-store, a browser can
+  // revalidate with 304 and reuse an old Content-Range (a stale "of N" total), so REST replies are never cached.
+  res.set("Cache-Control", "no-store");
   for (const [k, v] of Object.entries(reply.headers || {})) res.set(k, v);
   if (reply.json === undefined) return res.status(reply.status).end();
   return res.status(reply.status).json(reply.json);
